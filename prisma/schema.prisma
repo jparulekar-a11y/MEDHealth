@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  NURSE
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patientProfile  Patient?
+  sentMessages    Message[]     @relation("SentMessages")
+  appointments    Appointment[] @relation("DoctorAppointments")
+  alerts          Alert[]       @relation("AssignedAlerts")
+}
+
+model Patient {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth  DateTime
+  bloodType    String?
+  roomNumber   String?
+  condition    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  vitals        VitalReading[]
+  appointments  Appointment[] @relation("PatientAppointments")
+  messages      Message[]
+  alerts        Alert[]
+}
+
+model VitalReading {
+  id             String   @id @default(cuid())
+  patientId      String
+  patient        Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  heartRate      Int
+  systolicBP     Int
+  diastolicBP    Int
+  oxygenSat      Int
+  temperature    Float
+  recordedAt     DateTime @default(now())
+  source         String   @default("monitor")
+
+  @@index([patientId, recordedAt])
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  patientId   String
+  patient     Patient           @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId    String
+  doctor      User              @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  scheduledAt DateTime
+  duration    Int               @default(30)
+  reason      String
+  status      AppointmentStatus @default(SCHEDULED)
+  notes       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([scheduledAt])
+  @@index([doctorId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id])
+  content   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([patientId, createdAt])
+}
+
+model Alert {
+  id          String        @id @default(cuid())
+  patientId   String
+  patient     Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  assignedTo  String?
+  assignee    User?         @relation("AssignedAlerts", fields: [assignedTo], references: [id])
+  severity    AlertSeverity
+  title       String
+  message     String
+  acknowledged Boolean      @default(false)
+  createdAt   DateTime      @default(now())
+  resolvedAt  DateTime?
+
+  @@index([acknowledged, createdAt])
+}
