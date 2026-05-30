@@ -15,6 +15,7 @@ async function main() {
       email: "dr.smith@medhealth.com",
       name: "Dr. Sarah Smith",
       role: "DOCTOR",
+      passkey: "1234",
       avatar: "SS",
     },
   });
@@ -24,7 +25,18 @@ async function main() {
       email: "dr.patel@medhealth.com",
       name: "Dr. Raj Patel",
       role: "DOCTOR",
+      passkey: "5678",
       avatar: "RP",
+    },
+  });
+
+  const doctor3 = await prisma.user.create({
+    data: {
+      email: "dr.jaideep@medhealth.com",
+      name: "Dr. Jaideep",
+      role: "DOCTOR",
+      passkey: "1111",
+      avatar: "JD",
     },
   });
 
