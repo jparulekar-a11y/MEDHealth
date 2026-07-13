@@ -23,6 +23,7 @@ export type AlertPayload = {
   message: string;
   acknowledged: boolean;
   createdAt: string;
+  resolvedAt?: string | null;
   patient?: {
     user: { name: string };
     roomNumber: string | null;

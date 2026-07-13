@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
         emitAlert({
           ...alert,
           createdAt: alert.createdAt.toISOString(),
+          resolvedAt: alert.resolvedAt?.toISOString() ?? null,
         });
       } catch {
         // Socket may not be initialized
