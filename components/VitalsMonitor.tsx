@@ -33,8 +33,15 @@ export function VitalsMonitor({ patientId, patientName }: Props) {
     fetchVitals();
   }, [fetchVitals]);
 
+  // Poll when WebSockets aren't available (e.g. Vercel)
   useEffect(() => {
-    if (!patientId) return;
+    if (!patientId || socket?.connected) return;
+    const id = setInterval(fetchVitals, 3000);
+    return () => clearInterval(id);
+  }, [patientId, socket?.connected, fetchVitals]);
+
+  useEffect(() => {
+    if (!patientId || !socket) return;
     socket.emit("vitals:subscribe", patientId);
     return () => {
       socket.emit("vitals:unsubscribe", patientId);

@@ -33,8 +33,15 @@ export function ChatPanel({ patientId, currentUserId, currentUserName }: Props) 
     fetchMessages();
   }, [fetchMessages]);
 
+  // Poll when WebSockets aren't available (e.g. Vercel)
   useEffect(() => {
-    if (!patientId) return;
+    if (!patientId || socket?.connected) return;
+    const id = setInterval(fetchMessages, 3000);
+    return () => clearInterval(id);
+  }, [patientId, socket?.connected, fetchMessages]);
+
+  useEffect(() => {
+    if (!patientId || !socket) return;
     socket.emit("chat:join", patientId);
     return () => {
       socket.emit("chat:leave", patientId);

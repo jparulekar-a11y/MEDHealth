@@ -11,14 +11,20 @@ type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 let socket: AppSocket | null = null;
 
-export function getSocket(): AppSocket {
+const socketsEnabled =
+  typeof window !== "undefined" && process.env.NEXT_PUBLIC_ENABLE_SOCKETS !== "false";
+
+export function getSocket(): AppSocket | null {
+  if (!socketsEnabled) return null;
+
   if (!socket) {
     socket = io({
       path: "/api/socket",
       autoConnect: true,
       reconnection: true,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      timeout: 4000,
     });
   }
   return socket;
@@ -29,6 +35,7 @@ export function useSocket() {
 
   useEffect(() => {
     const s = getSocket();
+    if (!s) return;
 
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);
@@ -53,6 +60,7 @@ export function useSocketEvent<K extends keyof ServerToClientEvents>(
 ) {
   useEffect(() => {
     const s = getSocket();
+    if (!s) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     s.on(event, handler as any);
     return () => {

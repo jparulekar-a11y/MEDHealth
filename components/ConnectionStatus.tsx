@@ -6,14 +6,15 @@ import { cn } from "@/lib/utils";
 
 export function ConnectionStatus() {
   const { connected } = useSocket();
+  const socketsDisabled = process.env.NEXT_PUBLIC_ENABLE_SOCKETS === "false";
 
   return (
     <div
       className={cn(
         "flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium",
-        connected
+        connected || socketsDisabled
           ? "bg-emerald-50 text-emerald-700"
-          : "bg-red-50 text-red-700"
+          : "bg-amber-50 text-amber-700"
       )}
     >
       {connected ? (
@@ -22,10 +23,15 @@ export function ConnectionStatus() {
           <Wifi className="h-3.5 w-3.5" />
           Live
         </>
+      ) : socketsDisabled ? (
+        <>
+          <Wifi className="h-3.5 w-3.5" />
+          Online
+        </>
       ) : (
         <>
           <WifiOff className="h-3.5 w-3.5" />
-          Connecting...
+          Syncing...
         </>
       )}
     </div>

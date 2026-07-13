@@ -5,7 +5,7 @@ import type {
   InterServerEvents,
   ServerToClientEvents,
   SocketData,
-} from "./lib/socket-events";
+} from "./socket-events";
 
 let io: Server<
   ClientToServerEvents,
@@ -56,31 +56,39 @@ export function initSocketServer(httpServer: HTTPServer) {
 }
 
 export function getIO() {
-  if (!io) {
-    throw new Error("Socket.io not initialized");
-  }
   return io;
 }
 
+function safeEmit(fn: (server: NonNullable<typeof io>) => void) {
+  if (!io) return;
+  try {
+    fn(io);
+  } catch {
+    // Socket server not available (e.g. Vercel serverless)
+  }
+}
+
 export function emitVitalReading(reading: Parameters<ServerToClientEvents["vitals:new"]>[0]) {
-  getIO().to(`vitals:${reading.patientId}`).emit("vitals:new", reading);
-  getIO().emit("vitals:new", reading);
+  safeEmit((server) => {
+    server.to(`vitals:${reading.patientId}`).emit("vitals:new", reading);
+    server.emit("vitals:new", reading);
+  });
 }
 
 export function emitAlert(alert: Parameters<ServerToClientEvents["alert:new"]>[0]) {
-  getIO().emit("alert:new", alert);
+  safeEmit((server) => server.emit("alert:new", alert));
 }
 
 export function emitAlertUpdate(alert: Parameters<ServerToClientEvents["alert:updated"]>[0]) {
-  getIO().emit("alert:updated", alert);
+  safeEmit((server) => server.emit("alert:updated", alert));
 }
 
 export function emitMessage(message: Parameters<ServerToClientEvents["message:new"]>[0]) {
-  getIO().to(`chat:${message.patientId}`).emit("message:new", message);
+  safeEmit((server) => server.to(`chat:${message.patientId}`).emit("message:new", message));
 }
 
 export function emitAppointmentUpdate(
   appointment: Parameters<ServerToClientEvents["appointment:updated"]>[0]
 ) {
-  getIO().emit("appointment:updated", appointment);
+  safeEmit((server) => server.emit("appointment:updated", appointment));
 }

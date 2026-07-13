@@ -27,6 +27,11 @@ export function AppointmentList() {
     fetchAppointments();
   }, [fetchAppointments]);
 
+  useEffect(() => {
+    const id = setInterval(fetchAppointments, 4000);
+    return () => clearInterval(id);
+  }, [fetchAppointments]);
+
   useSocketEvent(
     "appointment:updated",
     useCallback((appt: AppointmentPayload) => {

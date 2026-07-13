@@ -22,6 +22,11 @@ export function AlertPanel() {
     fetchAlerts();
   }, [fetchAlerts]);
 
+  useEffect(() => {
+    const id = setInterval(fetchAlerts, 4000);
+    return () => clearInterval(id);
+  }, [fetchAlerts]);
+
   useSocketEvent("alert:new", useCallback((alert: AlertPayload) => {
     setAlerts((prev) => [alert as Alert, ...prev]);
   }, []));

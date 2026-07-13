@@ -39,6 +39,11 @@ export function PatientList({ selectedId, onSelect }: Props) {
     fetchPatients();
   }, [fetchPatients]);
 
+  useEffect(() => {
+    const id = setInterval(fetchPatients, 4000);
+    return () => clearInterval(id);
+  }, [fetchPatients]);
+
   useSocketEvent(
     "vitals:new",
     useCallback((reading: VitalReadingPayload) => {
